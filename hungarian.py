@@ -170,7 +170,7 @@ def hungarian(g: Graph, operation:str='min'):
             # print('T:')
             # for t in g.T:
             #     print(t)
-            update_potentials(g, dist, augmenting_path)
+            update_potentials(g, dist)
             # print('\nAfter update potentials:')
             # print('S:')
             # for s in g.S:
@@ -198,10 +198,10 @@ def augment_path(num_matches, matches, augmenting_path, g):
     return num_matches
 
 
-def update_potentials(g, dist, path):
+def update_potentials(g, dist):
     # s0 t0 s1 t1 ... sN tN
-    for vID in path:
-        g.V[vID].update_potential(dist[vID])
+    for v in g.V:
+        g.V[v.id].update_potential(dist[v.id])
 
 def make_augmenting_path(distances, previous):
     if distances:
