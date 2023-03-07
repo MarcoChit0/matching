@@ -118,12 +118,7 @@ def hungarian(g: Graph, operation:str='min'):
     # p(t) = 0, for t in T
     for t in g.T:
         t.set_potential(-maxwe)
-    cont = 1
     while num_matches < g.num_vertex:
-        # print('##############################')
-        # print(cont)
-        # print('##############################')
-        cont += 1
         A = [[] for v in g.V]
         for ind in range(int(g.num_vertex/2)):
             for edge in g.E[ind]:

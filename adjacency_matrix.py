@@ -12,7 +12,7 @@ for r in range(n):
         if not c == '':
             row.append(int(c))
     matrix.append(row)
-value = int(input())
+# value = int(input())
 
 costs = deepcopy(matrix)
 
