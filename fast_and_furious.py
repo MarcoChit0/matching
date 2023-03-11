@@ -1,5 +1,7 @@
+import argparse
 from copy import deepcopy
 import heapq
+import sys
 import time
 
 def augment(matched_vertex, M, augmenting_path):
@@ -79,65 +81,112 @@ def update_potentials(P, distances):
         P[v] = P[v] + distances[v]
 
 
+
 ######################
 ##  get input data  ##
 ######################
-start = time.time()
-n = int(input())
-V = [i for i in range(2*n)]
-M = [None for i in range(2*n)]
-matched_vertex = 0
-W = [[] for i in range(n)]
-maxwe = float('-inf')
-for r in range(n):
-    line = input()
-    splitline = line.split(' ')
-    for w in splitline:
-        if not w == '':
-            if maxwe <= -int(w):
-                maxwe = -int(w)
-            W[r].append(-int(w)) 
-value = int(input())
-P = []
-for i in range(2*n):
-    if i < n:
-        P.append(0)
+def from_cmd(operation, value):
+    n = int(input())
+    matched_vertex = 0
+    W = [[] for i in range(n)]
+    maxwe = float('-inf')
+    for r in range(n):
+        line = input()
+        splitline = line.split(' ')
+        for w in splitline:
+            if not w == '':
+                if operation == 'min':
+                    if maxwe <= -int(w):
+                        maxwe = -int(w)
+                    W[r].append(-int(w)) 
+                else:
+                    if maxwe <= int(w):
+                        maxwe = int(w)
+                    W[r].append(int(w)) 
+    if value:
+        v = int(input())
     else:
-        P.append(-maxwe)
+        v = 0
+    P = []
+    for i in range(2*n):
+        if i < n:
+            P.append(0)
+        else:
+            P.append(-maxwe)
+    return W, P, n, matched_vertex, v
 
 
 #########################
 ##  run matching algo  ##
 #########################
-count = 0
-while matched_vertex < 2*n:
-    prevnum = deepcopy(matched_vertex)
+def hungarian(W, P, n, matched_vertex):
+    M = [None for i in range(2*n)]
+    count = 0
+    num_dijkstras = 0
+    while matched_vertex < 2*n:
+        num_dijkstras += 1
+        distances, previous = dijkstra(W, M, P, n)
+        tuples_list = [(distances[i], i) for i in range(n, 2*n) if M[i] == None]
+        ######################################
+        ##  select minimun augmenting path  ##
+        mindist = float('inf')
+        minvertex = None
+        for dist, vertex in tuples_list:
+            if mindist > dist:
+                mindist = deepcopy(dist)
+                minvertex = deepcopy(vertex)
+        ######################################
+        augmenting_path = make_augmenting_path(minvertex, previous)
+        matched_vertex = augment(matched_vertex, M, augmenting_path)
+        update_potentials(P, distances)
+        count += 1
+    return M, num_dijkstras
 
-    distances, previous = dijkstra(W, M, P, n)
-    tuples_list = [(distances[i], i) for i in range(n, 2*n) if M[i] == None]
-    ######################################
-    ##  select minimun augmenting path  ##
-    mindist = float('inf')
-    minvertex = None
-    for dist, vertex in tuples_list:
-        if mindist > dist:
-            mindist = deepcopy(dist)
-            minvertex = deepcopy(vertex)
-    ######################################
-    augmenting_path = make_augmenting_path(minvertex, previous)
-    matched_vertex = augment(matched_vertex, M, augmenting_path)
-    update_potentials(P, distances)
-    count += 1
-    # print('{}: dist {}'.format(count, distances))
-    # print('{}: M {}'.format(count, M))
+class CommandLine:
+    def __init__(self):
+        parser = argparse.ArgumentParser(description = "Description for my parser")
+        parser.add_argument('--min', help = "operation := min", required = False, default = "")  
+        parser.add_argument('--max', help = "operation := max", required = False, default = "")
+        parser.add_argument('--value', help = "does not have expected value for comparision", required = False, default = "")  
+        parser.add_argument('--count_dijkstra', help="count the number of dijkstra's calls", required=False, default='')
+        argument = parser.parse_args()
+        if argument.min:
+            self.operation = 'min'
+        elif argument.max: 
+            self.operation = 'max'
+        else:
+            self.operation = 'max'
+        if argument.value == 'False':
+            self.value = False
+        else:
+            self.value = True
+        if argument.count_dijkstra == 'True':
+            self.count_dijkstra = True
+        else:
+            self.count_dijkstra = False
 
 
+start = time.time()
+cmd = CommandLine()
+W, P, n, matched_vertex, value = from_cmd(cmd.operation, cmd.value)
+M, num_dijkstras = hungarian(W, P, n, matched_vertex)
+end = time.time() - start
 ###########################################
 ##  get value and assert it is correct   ##
 ###########################################
 sum = 0
 for i in range(n):
     sum += W[i][M[i]-n]
-assert -sum == value
-end = time.time() - start
-print('{},{},{},{}'.format(end, value, -sum, M))
+if cmd.operation == 'min':
+    sum = -sum
+if cmd.value:
+    assert sum == value
+    if cmd.count_dijkstra:
+        print('{},{},{},{},{}'.format(end, num_dijkstras, value, sum, M))
+    else:
+        print('{},{},{},{}'.format(end, value, sum, M))
+else:
+    if cmd.count_dijkstra:
+        print('{},{},{},{},{}'.format(end, num_dijkstras, sum, sum, M))
+    else:
+        print('{},{},{},{}'.format(end, sum, sum, M))
