@@ -14,4 +14,8 @@ Para rodar o teste da subsection (3.2):
 	
 Para plotar os gráficos:
 	python plot.py
+
+Para gerar grafos aleatórios:
+	python genrgraphs.py 
+	OBS.: alterar range dos tamanhos no arquivo
 	
